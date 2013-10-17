@@ -1,0 +1,136 @@
+colors elflord
+
+set nocompatible  " enable vim specific commands
+au FocusLost * :wa
+set noeb " disable error bells
+set novb " don't blink the screen when there is an error
+set backspace=indent,eol,start  " backspacing over indention, end-of-line
+                                            "and start-of-line
+"set cindent " c-style indenting
+set autoindent
+set nosmartindent
+filetype indent on
+filetype plugin on
+
+set nu  " set line numbering on
+set expandtab  " keep the tab character, don't replace it with spaces
+set fileformat=unix  " use the unix fileformat
+set history=50 " keep 50 lines of command line history
+set ruler " show the cursor position in the bottom right corner
+set showcmd  " display incomplete commands
+
+set hidden " enable hidden files
+set hlsearch " highlight last search
+set incsearch " show partial searches real-time
+set magic " enable advanced regular expression in searches
+set shiftwidth=4 " number of spaces used with (auto)indention
+set tabstop=4 " tab size
+
+set nowrap
+set cmdheight=2
+set showmatch
+
+"For python
+
+let g:pyindent_open_paren = '&sw * 2'
+let g:pyindent_nested_paren = '&sw'
+let g:pyindent_continue = '&sw * 2'
+
+syn on " automatic syntax hi lighting
+
+if has("gui_running")
+        set guioptions-=r "remove right hand scroll bar
+        set cursorline
+        "hi CursorLine   cterm=NONE ctermbg=darkred ctermfg=white guibg=darkred guifg=white
+	set lines=52 columns=103
+endif
+
+set laststatus=2
+set statusline=
+set statusline+=%-3.3n\                      " buffernumber
+set statusline+=%f\                          " filename
+set statusline+=%h%m%r%w                     " statusflags
+set statusline+=\[%{strlen(&ft)?&ft:'none'}] " filetype
+set statusline+=%=                           " right alignremainder
+set statusline+=0x%-8B                       " charactervalue
+set statusline+=%-14(%l,%c%V%)               " line,character
+set statusline+=%<%P                         " file position
+
+set backupext=.bak  " Append `.bak' to backups
+set backupdir=~/.backup,.,/tmp
+set directory=.,~/.backup,/tmp
+
+if version >= 600
+    set foldenable
+    set foldmethod=marker
+endif
+
+"
+" Abbreviations
+"
+"""""""""""""""
+iab _NAME Puneeth Nekkundi Somashekar
+iab <expr> dts strftime("%a, %d %b %Y %H:%M:%S")
+iab .// /* % */<Esc>F%s<c-o>:call getchar()<CR>
+
+
+"
+" Keyboard remapping
+"
+
+"""""""""""" mapped space to pagedown!
+
+map <F4> :set hls!<cr>  toggle hi light search on/off
+map <space> <PageDown>
+map <c-space> <PageUp>
+
+map <c-h> :bp<cr>  " go to previous buffer
+map <c-l> :bn<cr> " go to next buffer
+map <m-k> <c-w>k<c-w>_<c-w><bar> " go one window up and maximize it
+map <m-j> <c-w>j<c-w>_<c-w><bar> " go one window down and maximize it
+map <m-h> <c-w>h<c-w>_<c-w><bar> " go one window left and maximize it
+map <m-l> <c-w>l<c-w>_<c-w><bar> " go one window right and maximize it
+
+map <c-s> :call Sav() <cr> " save
+map <c-q> :wq <cr> "save quit
+map ,brack :call BracketRemove()<cr>
+
+map ,edit :sp $HOME/.vimrc<cr>  " open .vimrc in a split window
+map ,source :w<cr> :source $HOME/.vimrc<cr> " save and reload .vimrc
+
+map <F2> :call FunHeading() <cr>
+
+"
+" Functions
+"
+"""""""""""""""
+
+" Remove triple brackets used to shorten functions
+function! BracketRemove()
+    execute ":%s/^# {{{[0-9]*//g"
+    execute ":%s/^# }}}[0-9]*//g"
+endfunction
+
+function! ConvertDos()
+    execute ":%s/^M//g"
+endfunction
+
+function! FunHeading()
+        let l:myline = line(".")
+        call append(l:myline, "/***************************************")
+        call append(l:myline+1,"*")
+        call append(l:myline+2,"*     Function:               ")
+        call append(l:myline+3,"*     Author: Puneeth Nekkundi Somashekar")
+        call append(l:myline+4,"*")
+        call append(l:myline+5,"***************************************/")
+endfunction
+
+fu! Sav()
+    "let l = line(".")
+    execute ":w"
+    "execute ":l"
+endfunction
+
+augroup filetypedetect
+  au! BufRead,BufNewFile *nc setfiletype nc
+augroup END
