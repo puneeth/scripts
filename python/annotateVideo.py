@@ -91,7 +91,7 @@ def processDir(dirpath, csvFileName):
 
         rowIndex += 1
 
-    print(("Processed " + rowIndex + ", missing file count : " + missingFileCount))
+    print(("Processed " + str(rowIndex) + ", missing file count : " + str(missingFileCount)))
 
 
 def testOnAImg():
@@ -143,4 +143,4 @@ if '__main__' == __name__:
 
     # Do some actual work.
     #testOnAImg()
-    processDir('CS_UnitB', 'overlayInfo_7355246007118.txt')
+    processDir('HV_UnitC', 'overlayInfo_20131021_155814.txt')
