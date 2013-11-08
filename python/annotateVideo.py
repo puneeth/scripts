@@ -14,26 +14,28 @@ import os
 import csv
 
 """ colors.."""
+black = "black"
 white = "white"
 grey = "grey"
+green = "green"
+red = "red"
 
 """Text with needs to be modified"""
 pangoText = ("<markup> <span face=\"Arial\"><span fgcolor=\"white\">\n"
-             "<span size=\"20000\"><b> UnitA          UnitB          UnitC "
-             "</b> </span></span>\n"
-             "<span size=\"15000\"><span fgcolor=\"white\">  v={0:03d} km/hr"
-             "      v={1:03d} km/hr        v={2:03d} km/hr </span>\n"
-             "<span fgcolor=\"white\">                            WiFi</span>"
-             "                     <span fgcolor=\"white\">WiFi</span>\n"
-             "<span fgcolor=\"{3}\">                            "
-             "Long Range</span>         <span fgcolor=\"{4}\">"
-             "Long Range</span>\n"
-             "<span fgcolor=\"{5}\">                            "
-             "Short Range</span>"
-             "        <span fgcolor=\"{6}\">Short Range</span> </span> "
-             "</span></markup>\n")
+             "<span size=\"24000\"><b>  Train A             Train B              Train C </b> </span>\n"
+             "<span size=\"14000\"><b>     LEADER                       FOLLOWER1                     FOLLOWER2   </b> </span></span>\n\n"
+             "<span size=\"15000\"><span fgcolor=\"white\">   V<sub>A</sub> = <span fgcolor=\"{3}\">{0:03d}</span>km/hr               "
+             "V<sub>B</sub> = <span fgcolor=\"{4}\">{1:03d}</span>km/hr                   V<sub>C</sub> = <span fgcolor=\"{5}\">{2:03d}</span>km/hr   \n"
+             "  Accel<sub>A</sub> = {6:+d}m/s<sup>2</sup>             Accel<sub>B</sub> = {7:+d}m/s<sup>2</sup>                 Accel<sub>C</sub> = {8:+d}m/s<sup>2</sup></span>\n"
+             "</span><span size=\"12000\"><b><span fgcolor=\"black\"><tt> <span bgcolor=\"green\">     WiFi     </span>    <span bgcolor=\"green\">       WiFi         </span>    "
+             "<span bgcolor=\"green\">        WiFi        </span></tt></span>\n"
+             "<tt><span fgcolor=\"{9}\">                   <span bgcolor=\"{13}\">  Long Range Radar  </span></span>    <span fgcolor=\"{10}\"><span bgcolor=\"{14}\">  Long Range Radar  "
+             "</span></span></tt>\n"
+             "<tt><span fgcolor=\"{11}\">                   <span bgcolor=\"{15}\"> Short Range Laser  </span></span>    <span fgcolor=\"{12}\"><span bgcolor=\"{16}\"> Short Range Laser  "
+             "</span></span></tt></b></span> "
+             "</span></markup><span size=\"8000\"></span>\n")
 
-convertcmdTp = ("convert -background '#0003' -gravity south "
+convertcmdTp = ("convert -background '#0006' -gravity south "
               "pango:@/tmp/pango.txt /tmp/text_{0}")
 compositecmdTp = "composite -gravity SouthEast /tmp/text_{0} {1} {2}/anno_{3}"
 
@@ -56,15 +58,40 @@ def processDir(dirpath, csvFileName):
         v1 = int(float(row[0]))
         v2 = int(float(row[1]))
         v3 = int(float(row[2]))
-        longRangeV2 = (white if (bool(int(row[3])) and not(bool(int(row[4])))) else grey)
-        shortRangeV2 = (white if (bool(int(row[4]))) else grey)
 
-        longRangeV3 = (white if (bool(int(row[5])) and not(bool(int(row[6])))) else grey)
-        shortRangeV3 = (white if (bool(int(row[6]))) else grey)
+        a1 = float(row[3])
+        a2 = float(row[4])
+        a3 = float(row[5])
+
+        v1Color = white
+        if(a1 > 0.1):
+            v1Color = green
+        elif(a1 < 0.1):
+            v1Color = red
+
+        v2Color = white
+        if(a2 > 0.1):
+            v2Color = green
+        elif(a2 < 0.1):
+            v2Color = red
+
+        v3Color = white
+        if(a1 > 0.1):
+            v3Color = green
+        elif(a1 < 0.1):
+            v3Color = red
+
+        (longRangeV2, lrV2Color) = ((black, green) if (bool(int(row[6])) and not(bool(int(row[7])))) else (grey, white))
+        (shortRangeV2, srV2Color) = ((black, green) if (bool(int(row[7]))) else (grey, white))
+
+        (longRangeV3, lrV3Color) = ((black, green) if (bool(int(row[8])) and not(bool(int(row[9])))) else (grey, white))
+        (shortRangeV3, srV3Color) = ((black, green) if (bool(int(row[9]))) else (grey, white))
 
         ptextfile = open('/tmp/pango.txt', 'w')
-        ptextfile.write(pangoText.format(v1, v2, v3, longRangeV2, longRangeV3,
-                                                     shortRangeV2, shortRangeV3))
+        ptextfile.write(pangoText.format(v1, v2, v3, v1Color, v2Color, v3Color,
+                                        int(a1), int(a2), int(a3),
+                                        longRangeV2, longRangeV3, shortRangeV2, shortRangeV3,
+                                        lrV2Color, lrV3Color, srV2Color, srV3Color))
         ptextfile.close()
 
         # get the image here
@@ -143,4 +170,5 @@ if '__main__' == __name__:
 
     # Do some actual work.
     #testOnAImg()
-    processDir('HV_UnitC', 'overlayInfo_20131021_155814.txt')
+    #processDir('HV_UnitC', 'overlayInfo_20131021_155814.txt')
+    processDir('stest', 'testset.txt')
