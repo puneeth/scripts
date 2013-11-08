@@ -12,6 +12,7 @@ from subprocess import call
 import glob
 import os
 import csv
+import tempfile
 
 """ colors.."""
 black = "black"
@@ -36,8 +37,8 @@ pangoText = ("<markup> <span face=\"Arial\"><span fgcolor=\"white\">\n"
              "</span></markup><span size=\"8000\"></span>\n")
 
 convertcmdTp = ("convert -background '#0006' -gravity south "
-              "pango:@/tmp/pango.txt /tmp/text_{0}")
-compositecmdTp = "composite -gravity SouthEast /tmp/text_{0} {1} {2}/anno_{3}"
+              "pango:@{0}/pango.txt {0}/text_{1}")
+compositecmdTp = "composite -gravity SouthEast {0}/text_{1} {2} {3}/anno_{4}"
 
 
 def processDir(dirpath, csvFileName):
@@ -50,6 +51,8 @@ def processDir(dirpath, csvFileName):
         return
 
     csvFile = csv.reader(open(csvFileName, 'rb'))
+
+    temppath = tempfile.mkdtemp()
 
     rowIndex = 0
     missingFileCount = 0
@@ -87,7 +90,8 @@ def processDir(dirpath, csvFileName):
         (longRangeV3, lrV3Color) = ((black, green) if (bool(int(row[8])) and not(bool(int(row[9])))) else (grey, white))
         (shortRangeV3, srV3Color) = ((black, green) if (bool(int(row[9]))) else (grey, white))
 
-        ptextfile = open('/tmp/pango.txt', 'w')
+        pangoFilepath = os.path.join(temppath, 'pango.txt')
+        ptextfile = open(pangoFilepath, 'w')
         ptextfile.write(pangoText.format(v1, v2, v3, v1Color, v2Color, v3Color,
                                         int(a1), int(a2), int(a3),
                                         longRangeV2, longRangeV3, shortRangeV2, shortRangeV3,
@@ -100,8 +104,8 @@ def processDir(dirpath, csvFileName):
 
         # process the image and save
         if(os.path.exists(imgPath)):
-            convertcmd = convertcmdTp.format(imgName)
-            compositecmd = compositecmdTp.format(imgName, imgPath, dirpath, imgName)
+            convertcmd = convertcmdTp.format(temppath, imgName)
+            compositecmd = compositecmdTp.format(temppath, imgName, imgPath, dirpath, imgName)
             #print (convertcmd)
             conRet = call(convertcmd, shell=True)
             if(conRet != 0):
@@ -152,6 +156,11 @@ if '__main__' == __name__:
     optp = optparse.OptionParser()
     optp.add_option('-v', '--verbose', dest='verbose', action='count',
                     help="Increase verbosity (specify multiple times for more)")
+    optp.add_option('-f', '--overlayfile', dest='overlayfile', metavar="FILE",
+                    help="File containg overlay information")
+
+    optp.add_option('-d', '--directory', dest='directory', metavar="FILE",
+                    help="Directory containing images to overlay")
     # Parse the arguments (defaults to parsing sys.argv).
     opts, args = optp.parse_args()
 
@@ -168,7 +177,14 @@ if '__main__' == __name__:
     # a reasonable default format.
     logging.basicConfig(level=log_level)
 
+    if(not opts.overlayfile):
+        optp.error('Overlay file not given!')
+
+    if(not opts.directory):
+        optp.error('Directory not given!')
+
     # Do some actual work.
     #testOnAImg()
     #processDir('HV_UnitC', 'overlayInfo_20131021_155814.txt')
-    processDir('stest', 'testset.txt')
+    #processDir('stest', 'testset.txt')
+    processDir(opts.directory, opts.overlayfile)
