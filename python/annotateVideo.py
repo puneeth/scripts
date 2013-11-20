@@ -25,9 +25,9 @@ red = "red"
 pangoText = ("<markup> <span face=\"Arial\"><span fgcolor=\"white\">\n"
              "<span size=\"24000\"><b>  Train A             Train B              Train C </b> </span>\n"
              "<span size=\"14000\"><b>     LEADER                       FOLLOWER1                     FOLLOWER2   </b> </span></span>\n\n"
-             "<span size=\"15000\"><span fgcolor=\"white\">   V<sub>A</sub> = <span fgcolor=\"{3}\">{0:03d}</span>km/hr               "
-             "V<sub>B</sub> = <span fgcolor=\"{4}\">{1:03d}</span>km/hr                   V<sub>C</sub> = <span fgcolor=\"{5}\">{2:03d}</span>km/hr   \n"
-             "  Accel<sub>A</sub> = {6:+d}m/s<sup>2</sup>             Accel<sub>B</sub> = {7:+d}m/s<sup>2</sup>                 Accel<sub>C</sub> = {8:+d}m/s<sup>2</sup></span>\n"
+             "<span size=\"15000\"><span fgcolor=\"white\">   V<sub>A</sub> = {0:03d}<span fgcolor=\"{3}\">km/hr</span>               "
+             "V<sub>B</sub> = {1:03d}<span fgcolor=\"{4}\">km/hr</span>                   V<sub>C</sub> = {2:03d}<span fgcolor=\"{5}\">km/hr</span>   \n"
+             " Accel<sub>A</sub> = {6:+0.1f}m/s<sup>2</sup>          Accel<sub>B</sub> = {7:+0.1f}m/s<sup>2</sup>             Accel<sub>C</sub> = {8:+0.1f}m/s<sup>2</sup></span>\n"
              "</span><span size=\"12000\"><b><span fgcolor=\"black\"><tt> <span bgcolor=\"green\">     WiFi     </span>    <span bgcolor=\"green\">       WiFi         </span>    "
              "<span bgcolor=\"green\">        WiFi        </span></tt></span>\n"
              "<tt><span fgcolor=\"{9}\">                   <span bgcolor=\"{13}\">  Long Range Radar  </span></span>    <span fgcolor=\"{10}\"><span bgcolor=\"{14}\">  Long Range Radar  "
@@ -36,7 +36,7 @@ pangoText = ("<markup> <span face=\"Arial\"><span fgcolor=\"white\">\n"
              "</span></span></tt></b></span> "
              "</span></markup><span size=\"8000\"></span>\n")
 
-convertcmdTp = ("convert -background '#0006' -gravity south "
+convertcmdTp = ("convert -background '#000A' -gravity south "
               "pango:@{0}/pango.txt {0}/text_{1}")
 compositecmdTp = "composite -gravity SouthEast {0}/text_{1} {2} {3}/anno_{4}"
 
@@ -66,34 +66,40 @@ def processDir(dirpath, csvFileName):
         a2 = float(row[4])
         a3 = float(row[5])
 
-        v1Color = white
-        if(a1 > 0.1):
+        if(a1 >= 0.01):
             v1Color = green
-        elif(a1 < 0.1):
+        elif(a1 < -0.01):
             v1Color = red
+        else:
+            v1Color = white  # no need to display values lower than these..
+            a1 = 0
 
-        v2Color = white
-        if(a2 > 0.1):
+        if(a2 >= 0.01):
             v2Color = green
-        elif(a2 < 0.1):
+        elif(a2 < -0.01):
             v2Color = red
+        else:
+            v2Color = white
+            a2 = 0
 
-        v3Color = white
-        if(a1 > 0.1):
+        if(a3 >= 0.01):
             v3Color = green
-        elif(a1 < 0.1):
+        elif(a3 < -0.01):
             v3Color = red
+        else:
+            v3Color = white
+            a3 = 0
 
-        (longRangeV2, lrV2Color) = ((black, green) if (bool(int(row[6])) and not(bool(int(row[7])))) else (grey, white))
+        (longRangeV2, lrV2Color) = ((black, green) if (bool(int(row[6]))) else (grey, white))
         (shortRangeV2, srV2Color) = ((black, green) if (bool(int(row[7]))) else (grey, white))
 
-        (longRangeV3, lrV3Color) = ((black, green) if (bool(int(row[8])) and not(bool(int(row[9])))) else (grey, white))
+        (longRangeV3, lrV3Color) = ((black, green) if (bool(int(row[8]))) else (grey, white))
         (shortRangeV3, srV3Color) = ((black, green) if (bool(int(row[9]))) else (grey, white))
 
         pangoFilepath = os.path.join(temppath, 'pango.txt')
         ptextfile = open(pangoFilepath, 'w')
         ptextfile.write(pangoText.format(v1, v2, v3, v1Color, v2Color, v3Color,
-                                        int(a1), int(a2), int(a3),
+                                        a1, a2, a3,
                                         longRangeV2, longRangeV3, shortRangeV2, shortRangeV3,
                                         lrV2Color, lrV3Color, srV2Color, srV3Color))
         ptextfile.close()
@@ -110,7 +116,6 @@ def processDir(dirpath, csvFileName):
             conRet = call(convertcmd, shell=True)
             if(conRet != 0):
                 logging.debug("Failed to run convert cmd")
-                return
 
             #print (compositecmd)
             compRet = call(compositecmd, shell=True)
